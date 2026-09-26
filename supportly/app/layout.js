@@ -2,7 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-
+import SessionWrapper from "./components/SessionWrapper";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -25,6 +25,7 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-screen bg-slate-950 font-sans text-white">
+        <SessionWrapper>
         <Navbar />
 
         <main className="relative min-h-[80vh] overflow-hidden">
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
         </main>
 
         <Footer />
+        </SessionWrapper>
       </body>
     </html>
   );
