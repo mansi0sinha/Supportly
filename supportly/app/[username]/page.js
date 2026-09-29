@@ -30,8 +30,7 @@ const Username = async ({ params }) => {
     
 
 
-    <div className="payment">
-     </div>
+    
     </main>
   );
 };
