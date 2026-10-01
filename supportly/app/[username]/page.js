@@ -27,7 +27,10 @@ const Username = async ({ params }) => {
         </div>
       </section>
 
-    <div className="payment"></div>
+    <div className="payment">
+    <div className="content">
+      </div>
+    </div>
 
     
     </main>
