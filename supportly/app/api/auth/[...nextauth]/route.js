@@ -30,7 +30,7 @@ export  const authoptions=NextAuth({
   async signIn({ user, account, profile, email, credentials }) {
     const isAllowedToSignIn = true
     if(account.provider=="github"){
-      //Connect to the database
+     
       const client=await mongoose.connect()
       
     }
