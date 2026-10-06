@@ -87,7 +87,7 @@ const Navbar = () => {
                   {userName.charAt(0).toUpperCase()}
                 </div>
 
-                <span className="max-w-[140px] truncate">
+                <span className="max-w-35 truncate">
                   Welcome, {userName}
                 </span>
 
@@ -144,11 +144,11 @@ const Navbar = () => {
                     </Link>
 
                     <Link
-                      href="/earnings"
+                      href={`/${session.user.name}`}
                       onClick={() => setIsOpen(false)}
                       className="block px-4 py-2.5 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white"
                     >
-                      Earnings
+                      Your Page
                     </Link>
 
                   </div>
