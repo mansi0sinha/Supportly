@@ -31,7 +31,7 @@ const Username = async ({ params }) => {
       <div className="mx-auto mt-24 flex max-w-6xl flex-col gap-8 px-6 pb-16 lg:flex-row">
 
 
-        {/* Supporters */}
+      
         <div className="w-full rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg lg:w-1/2">
           <h2 className="mb-1 text-xl font-semibold text-white">
             Recent Supporters
