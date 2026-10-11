@@ -1,9 +1,10 @@
+
 import NextAuth from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import User from "@/models/User";
 import connectDB from "@/db/connectDB";
 
-export const authoptions = NextAuth({
+export const authOptions = {
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_ID,
@@ -13,50 +14,95 @@ export const authoptions = NextAuth({
 
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account.provider === "github") {
+      if (account?.provider !== "github") {
+        return false;
+      }
+
+      try {
         await connectDB();
 
-        const email = user.email || profile?.email;
+        const email = (user.email || profile?.email || "")
+          .trim()
+          .toLowerCase();
 
         if (!email) {
-          console.log("GitHub did not provide an email");
+          console.error(
+            "GitHub did not provide an email. Login cannot continue."
+          );
           return false;
         }
 
-        const username = email.split("@")[0];
+        // Find the existing database account.
+        let dbUser = await User.findOne({ email });
 
-        const existingUser = await User.findOne({ email });
+        if (!dbUser) {
+          const baseUsername = (
+            email.split("@")[0].toLowerCase().replace(/[^a-z0-9_-]/g, "") ||
+            "creator"
+          ).slice(0, 25);
 
-        if (!existingUser) {
-          const newUser = new User({
-            email: email,
-            username: username,
+          let username = baseUsername;
+          let suffix = 1;
+
+          // Avoid username collisions.
+          while (await User.exists({ username })) {
+            username = `${baseUsername.slice(0, 25)}${suffix}`;
+            suffix++;
+          }
+
+          dbUser = await User.create({
+            email,
+            name: user.name || username,
+            username,
+            profilepic: user.image || "",
           });
-
-          await newUser.save();
-          user.name = newUser.username;
         } else {
-          user.name = existingUser.username;
-        }
-      }
+          // Populate missing profile information without
+          // overwriting settings the user already saved.
+          if (!dbUser.name && user.name) {
+            dbUser.name = user.name;
+          }
 
-      return true;
+          if (!dbUser.profilepic && user.image) {
+            dbUser.profilepic = user.image;
+          }
+
+          await dbUser.save();
+        }
+
+        // Available to the JWT callback.
+        user.id = dbUser._id.toString();
+        user.username = dbUser.username;
+
+        return true;
+      } catch (error) {
+        console.error("GitHub sign-in failed:", error.message);
+        return false;
+      }
     },
 
-    async session({ session }) {
-      await connectDB();
+    async jwt({ token, user }) {
+      if (user) {
+        token.userId = user.id;
+        token.username = user.username;
+      }
 
-      const dbUser = await User.findOne({
-        email: session.user.email,
-      });
+      return token;
+    },
 
-      if (dbUser) {
-        session.user.name = dbUser.username;
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.userId;
+        session.user.username = token.username;
       }
 
       return session;
     },
   },
-});
 
-export { authoptions as GET, authoptions as POST };
+  secret: process.env.NEXTAUTH_SECRET,
+};
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
