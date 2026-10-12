@@ -40,7 +40,7 @@ function normalizeUsername(value) {
   }
 }
 
-const PaymentPage = ({ username }) => {
+const PaymentPage = ({ username, profile }) => {
   const creatorUsername = useMemo(
     () => normalizeUsername(username).trim(),
     [username]
@@ -80,10 +80,16 @@ const PaymentPage = ({ username }) => {
       );
 
       const data = await readApiResponse(response);
+if (!response.ok) {
+  console.error("Recent supporters API error:", {
+    status: response.status,
+    details: data,
+  });
 
-      if (!response.ok) {
-        throw new Error(data.error || "Could not load supporters.");
-      }
+  throw new Error(
+    data.error || `Request failed with status ${response.status}`
+  );
+}
 
       setSupporters(
         Array.isArray(data.supporters) ? data.supporters : []
@@ -290,34 +296,51 @@ const PaymentPage = ({ username }) => {
       />
 
       <main className="min-h-screen bg-slate-950 text-white">
-        <section className="relative">
-          <div className="h-80 w-full overflow-hidden bg-slate-900">
-            <img
-              className="h-full w-full object-cover"
-              src="https://c10.patreonusercontent.com/4/patreon-media/p/campaign/4842667/452146dcfeb04f38853368f554aadde1/eyJ3IjoxMjAwLCJ3ZSI6MX0%3D/20.gif?token-hash=5RiPBdX3dYyQVaBBvrlXbWzBSKuciesRYZJfbx2y9mU%3D&token-time=1793750400"
-              alt="Creator cover"
-            />
-          </div>
+     
+<section className="relative">
+  <div className="h-64 w-full overflow-hidden bg-linear-to-r from-indigo-950 via-slate-900 to-slate-800 sm:h-80">
+    {profile?.coverPicture && (
+      <img
+        src={profile.coverPicture}
+        alt={`${profile?.name || creatorUsername}'s cover`}
+        className="h-full w-full object-cover"
+      />
+    )}
+  </div>
 
-          <div className="absolute left-1/2 top-62.5 -translate-x-1/2">
-            <div className="h-36 w-36 overflow-hidden rounded-full border-4 border-slate-950 bg-slate-800 shadow-xl">
-              <img
-                src="https://c10.patreonusercontent.com/4/patreon-media/p/campaign/4842667/aa52624d1cef47ba91c357da4a7859cf/eyJoIjozNjAsInciOjM2MH0%3D/4.gif?token-hash=dZDQ65r7sI-9WNLKTsDhixHJStvr-p6_TFyys_TEQa0%3D&token-time=1791763200"
-                alt="Creator profile"
-                className="h-full w-full object-cover"
-              />
-            </div>
-          </div>
-        </section>
+  <div className="absolute left-1/2 top-48 -translate-x-1/2 sm:top-60">
+    <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-slate-950 bg-indigo-600 text-4xl font-bold text-white shadow-xl sm:h-36 sm:w-36">
+      {profile?.profilePicture ? (
+        <img
+          src={profile.profilePicture}
+          alt={profile?.name || creatorUsername}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        (profile?.name || creatorUsername || "?")
+          .charAt(0)
+          .toUpperCase()
+      )}
+    </div>
+  </div>
+</section>
 
-        <header className="mt-20 px-4 text-center">
-          <h1 className="wrap-break-word text-3xl font-bold">
-            {creatorUsername}
-          </h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Support the creator and their work.
-          </p>
-        </header>
+
+        
+<header className="mt-20 px-4 text-center sm:mt-24">
+  <h1 className="wrap-break-word text-3xl font-bold">
+    {profile?.name || creatorUsername}
+  </h1>
+
+  <p className="mt-2 text-sm text-indigo-400">
+    @{creatorUsername}
+  </p>
+
+  <p className="mx-auto mt-4 max-w-2xl whitespace-pre-wrap text-slate-400">
+    {profile?.bio || "Support this creator and help them keep creating."}
+  </p>
+</header>
+
 
         <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-8 px-6 pb-16 lg:flex-row">
           {/* Recent supporters */}

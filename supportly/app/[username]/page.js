@@ -1,14 +1,36 @@
-import React from "react";
+
+import { notFound } from "next/navigation";
+import connectDB from "@/db/connectDB";
+import User from "@/models/User";
 import PaymentPage from "../components/PaymentPage";
 
-const Username = async ({ params }) => {
+export default async function UsernamePage({ params }) {
   const { username } = await params;
 
-  return (
-    <>
-      <PaymentPage username={username} />
-    </>
-  );
-};
+  await connectDB();
 
-export default Username;
+  const creator = await User.findOne({
+    username: username.toLowerCase(),
+  })
+    .select("name username bio profilepic coverpic")
+    .lean();
+
+  if (!creator) {
+    notFound();
+  }
+
+  const profile = {
+    name: creator.name || creator.username,
+    username: creator.username,
+    bio: creator.bio || "",
+    profilePicture: creator.profilepic || "",
+    coverPicture: creator.coverpic || "",
+  };
+
+  return (
+    <PaymentPage
+      username={creator.username}
+      profile={profile}
+    />
+  );
+}

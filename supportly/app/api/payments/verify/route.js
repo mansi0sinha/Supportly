@@ -1,20 +1,18 @@
-
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import Razorpay from "razorpay";
 import connectDB from "@/lib/mongodb";
+import User from "@/models/User";
 import Payment from "@/models/Payment";
 
 export const runtime = "nodejs";
 
 function getRazorpayConfig() {
   const keyId =
-    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-    process.env.RAZORPAY_KEY_ID;
+    process.env.RAZORPAY_KEY_ID ||
+    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
-  const keySecret =
-    process.env.RAZORPAY_KEY_SECRET ||
-    process.env.KEY_SECRET;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId || !keySecret) {
     throw new Error("Razorpay server configuration is missing.");
@@ -25,7 +23,16 @@ function getRazorpayConfig() {
 
 export async function POST(request) {
   try {
-    const body = await request.json();
+    let body;
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON request body." },
+        { status: 400 }
+      );
+    }
 
     const {
       razorpay_order_id,
@@ -37,8 +44,8 @@ export async function POST(request) {
       typeof razorpay_order_id !== "string" ||
       typeof razorpay_payment_id !== "string" ||
       typeof razorpay_signature !== "string" ||
-      !razorpay_order_id ||
-      !razorpay_payment_id ||
+      !razorpay_order_id.trim() ||
+      !razorpay_payment_id.trim() ||
       !/^[a-f0-9]{64}$/i.test(razorpay_signature)
     ) {
       return NextResponse.json(
@@ -49,7 +56,6 @@ export async function POST(request) {
 
     const { keyId, keySecret } = getRazorpayConfig();
 
-    // Verify the signature returned by Razorpay Checkout.
     const expectedSignature = crypto
       .createHmac("sha256", keySecret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -78,16 +84,15 @@ export async function POST(request) {
       key_secret: keySecret,
     });
 
-    // Verify payment and order directly with Razorpay.
-    const [payment, order] = await Promise.all([
+    const [razorpayPayment, order] = await Promise.all([
       razorpay.payments.fetch(razorpay_payment_id),
       razorpay.orders.fetch(razorpay_order_id),
     ]);
 
     if (
-      payment.order_id !== order.id ||
-      payment.order_id !== razorpay_order_id ||
-      payment.status !== "captured"
+      order.id !== razorpay_order_id ||
+      razorpayPayment.order_id !== order.id ||
+      razorpayPayment.status !== "captured"
     ) {
       return NextResponse.json(
         { error: "Payment is not captured for this order." },
@@ -96,8 +101,11 @@ export async function POST(request) {
     }
 
     if (
-      payment.amount !== order.amount ||
-      payment.currency !== order.currency ||
+      !Number.isSafeInteger(order.amount) ||
+      order.amount < 100 ||
+      order.amount > 10000000 ||
+      razorpayPayment.amount !== order.amount ||
+      razorpayPayment.currency !== order.currency ||
       order.currency !== "INR"
     ) {
       return NextResponse.json(
@@ -108,7 +116,7 @@ export async function POST(request) {
 
     const creator =
       typeof order.notes?.creator === "string"
-        ? order.notes.creator.trim()
+        ? order.notes.creator.trim().toLowerCase()
         : "";
 
     const supporterName =
@@ -118,24 +126,52 @@ export async function POST(request) {
 
     const message =
       typeof order.notes?.message === "string"
-        ? order.notes.message
+        ? order.notes.message.trim()
         : "";
 
-    if (!creator || !supporterName) {
+    if (
+      !/^[a-z0-9_-]{3,25}$/.test(creator) ||
+      !supporterName ||
+      supporterName.length > 100 ||
+      message.length > 500
+    ) {
       return NextResponse.json(
-        { error: "Supporter details are missing from the order." },
+        { error: "Supporter details are missing or invalid." },
         { status: 400 }
       );
     }
 
     await connectDB();
 
-    // paymentId must have a unique database index in the Payment model.
-    const existingPayment = await Payment.findOne({
-      paymentId: razorpay_payment_id,
+    const creatorExists = await User.exists({
+      username: creator,
     });
 
+    if (!creatorExists) {
+      return NextResponse.json(
+        { error: "Creator not found." },
+        { status: 404 }
+      );
+    }
+
+    const existingPayment = await Payment.findOne({
+      paymentId: razorpay_payment_id,
+    }).lean();
+
     if (existingPayment) {
+      const matches =
+        existingPayment.oid === razorpay_order_id &&
+        existingPayment.to_user === creator &&
+        existingPayment.amount === razorpayPayment.amount / 100 &&
+        existingPayment.done === true;
+
+      if (!matches) {
+        return NextResponse.json(
+          { error: "Payment ID conflicts with an existing record." },
+          { status: 409 }
+        );
+      }
+
       return NextResponse.json({
         success: true,
         message: "Payment was already verified.",
@@ -148,7 +184,7 @@ export async function POST(request) {
       to_user: creator,
       oid: razorpay_order_id,
       message,
-      amount: payment.amount / 100,
+      amount: razorpayPayment.amount / 100,
       done: true,
     });
 
@@ -157,7 +193,6 @@ export async function POST(request) {
       message: "Payment verified and saved.",
     });
   } catch (error) {
-    // A duplicate-key error can occur if simultaneous requests race.
     if (error?.code === 11000) {
       return NextResponse.json({
         success: true,

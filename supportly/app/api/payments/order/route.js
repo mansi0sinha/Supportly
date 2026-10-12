@@ -1,7 +1,8 @@
-
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import crypto from "node:crypto";
+import connectDB from "@/lib/mongodb";
+import User from "@/models/User";
 
 export const runtime = "nodejs";
 
@@ -10,12 +11,10 @@ const MAX_AMOUNT_RUPEES = 100000;
 
 function getRazorpayConfig() {
   const keyId =
-    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-    process.env.RAZORPAY_KEY_ID;
+    process.env.RAZORPAY_KEY_ID ||
+    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
-  const keySecret =
-    process.env.RAZORPAY_KEY_SECRET ||
-    process.env.KEY_SECRET;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId || !keySecret) {
     throw new Error("Razorpay server configuration is missing.");
@@ -26,10 +25,21 @@ function getRazorpayConfig() {
 
 export async function POST(request) {
   try {
-    const body = await request.json();
+    let body;
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON request body." },
+        { status: 400 }
+      );
+    }
 
     const creator =
-      typeof body.creator === "string" ? body.creator.trim() : "";
+      typeof body.creator === "string"
+        ? body.creator.trim().toLowerCase()
+        : "";
 
     const supporterName =
       typeof body.supporterName === "string"
@@ -37,13 +47,14 @@ export async function POST(request) {
         : "";
 
     const message =
-      typeof body.message === "string" ? body.message.trim() : "";
+      typeof body.message === "string"
+        ? body.message.trim()
+        : "";
 
     const amountValue = Number(body.amount);
 
     if (
-      !creator ||
-      creator.length > 100 ||
+      !/^[a-z0-9_-]{3,25}$/.test(creator) ||
       !supporterName ||
       supporterName.length > 100 ||
       message.length > 500 ||
@@ -57,7 +68,19 @@ export async function POST(request) {
       );
     }
 
-    // Use server-side credentials. Never expose the secret to the browser.
+    await connectDB();
+
+    const creatorExists = await User.exists({
+      username: creator,
+    });
+
+    if (!creatorExists) {
+      return NextResponse.json(
+        { error: "Creator not found." },
+        { status: 404 }
+      );
+    }
+
     const { keyId, keySecret } = getRazorpayConfig();
 
     const razorpay = new Razorpay({
@@ -65,11 +88,11 @@ export async function POST(request) {
       key_secret: keySecret,
     });
 
-    // A short unique receipt helps identify this order in Razorpay.
+    const amountInPaise = amountValue * 100;
     const receipt = `sup_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`;
 
     const order = await razorpay.orders.create({
-      amount: amountValue * 100,
+      amount: amountInPaise,
       currency: "INR",
       receipt,
       notes: {
@@ -81,7 +104,7 @@ export async function POST(request) {
 
     if (
       !order?.id ||
-      order.amount !== amountValue * 100 ||
+      order.amount !== amountInPaise ||
       order.currency !== "INR"
     ) {
       console.error("Razorpay returned unexpected order details.");
@@ -104,13 +127,6 @@ export async function POST(request) {
       statusCode: error.statusCode,
       errorCode: error.error?.code,
     });
-
-    if (error instanceof SyntaxError) {
-      return NextResponse.json(
-        { error: "Invalid JSON request body." },
-        { status: 400 }
-      );
-    }
 
     return NextResponse.json(
       { error: "Unable to create payment order." },

@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
@@ -16,6 +15,7 @@ const PaymentSchema = new Schema(
       type: String,
       required: true,
       trim: true,
+      lowercase: true,
       index: true,
     },
 
@@ -37,6 +37,7 @@ const PaymentSchema = new Schema(
       type: String,
       default: "",
       maxlength: 500,
+      trim: true,
     },
 
     amount: {
@@ -45,29 +46,17 @@ const PaymentSchema = new Schema(
       min: 1,
     },
 
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
-
     done: {
       type: Boolean,
       default: false,
     },
   },
   {
-    timestamps: {
-      createdAt: "createdAt",
-      updatedAt: "updatedAt",
-    },
+    timestamps: true,
   }
 );
 
-// Reuse the compiled model during Next.js development.
-export default mongoose.models.Payment ||
-  model("Payment", PaymentSchema);
+const Payment =
+  mongoose.models.Payment || model("Payment", PaymentSchema);
+
+export default Payment;

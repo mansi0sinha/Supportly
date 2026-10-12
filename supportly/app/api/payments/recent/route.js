@@ -1,16 +1,20 @@
-
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Payment from "@/models/Payment";
+import User from "@/models/User";
 
 export const runtime = "nodejs";
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const username = searchParams.get("username")?.trim();
 
-    if (!username || username.length > 100) {
+    const username = searchParams
+      .get("username")
+      ?.trim()
+      .toLowerCase();
+
+    if (!username || !/^[a-z0-9_-]{3,25}$/.test(username)) {
       return NextResponse.json(
         { error: "A valid creator username is required." },
         { status: 400 }
@@ -18,6 +22,17 @@ export async function GET(request) {
     }
 
     await connectDB();
+
+    const creatorExists = await User.exists({
+      username,
+    });
+
+    if (!creatorExists) {
+      return NextResponse.json(
+        { error: "Creator not found." },
+        { status: 404 }
+      );
+    }
 
     const supporters = await Payment.find({
       to_user: username,
