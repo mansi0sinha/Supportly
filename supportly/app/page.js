@@ -104,15 +104,15 @@ export default function Home() {
               </div>
 
               <div className="mt-5 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
-                <div className="relative h-28 overflow-hidden bg-gradient-to-br from-indigo-500/40 via-violet-500/20 to-slate-900">
+                <div className="relative h-28 overflow-hidden bg-linear-to-br from-indigo-500/40 via-violet-500/20 to-slate-900">
                   <div className="absolute -right-6 -top-14 h-36 w-36 rounded-full border border-white/10" />
                   <div className="absolute -right-1 -top-7 h-24 w-24 rounded-full border border-white/10" />
-                  <div className="absolute bottom-0 left-0 h-12 w-full bg-gradient-to-t from-slate-950/50 to-transparent" />
+                  <div className="absolute bottom-0 left-0 h-12 w-full bg-linear-to-t from-slate-950/50 to-transparent" />
                 </div>
 
                 <div className="px-5 pb-5">
                   <div className="-mt-9 flex items-end justify-between">
-                    <div className="flex h-[68px] w-[68px] items-center justify-center rounded-2xl border-4 border-slate-950 bg-indigo-500 text-2xl font-bold shadow-lg">
+                    <div className="flex h-17 w-17 items-center justify-center rounded-2xl border-4 border-slate-950 bg-indigo-500 text-2xl font-bold shadow-lg">
                       C
                     </div>
                     <span className="mb-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-400">

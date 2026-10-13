@@ -53,12 +53,14 @@ export async function POST(request) {
       );
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json(
-        { error: "Please enter a valid email address." },
-        { status: 400 }
-      );
-    }
+    
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  return NextResponse.json(
+    { error: "Please enter a valid email address." },
+    { status: 400 }
+  );
+}
+
 
     if (password.length < 8 || Buffer.byteLength(password, "utf8") > 72) {
       return NextResponse.json(
