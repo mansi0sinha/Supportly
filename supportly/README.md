@@ -37,23 +37,23 @@ Built with **Next.js, MongoDB, NextAuth.js, and Razorpay**, Supportly explores a
 
 ### Homepage
 
-![Supportly Homepage](screenshots/screenshot1.png)
+![Supportly Homepage](screenshot/screenshot1.png)
 
 ### Creator Profile
 
-![Supportly Creator Profile](screenshots/screenshot2.png)
+![Supportly Creator Profile](screenshot/screenshot2.png)
 
 ### Creator Support & Payment
 
-![Supportly Payment Page](screenshots/screenshot3.png)
+![Supportly Payment Page](screenshot/screenshot3.png)
 
 ### Dashboard
 
-![Supportly Dashboard](screenshots/screenshot4.png)
+![Supportly Dashboard](screenshot/screenshot4.png)
 
 ### Account Settings
 
-![Supportly Account Settings](screenshots/screenshot5.png)
+![Supportly Account Settings](screenshot/screenshot5.png)
 
 ## 📄 Application Pages
 
