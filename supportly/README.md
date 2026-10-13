@@ -55,7 +55,7 @@ Built with **Next.js, MongoDB, NextAuth.js, and Razorpay**, this project explore
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/mansi0sinha/Supportly.git
+git clone <YOUR_REPOSITORY_URL>
 cd supportly
 ```
 
