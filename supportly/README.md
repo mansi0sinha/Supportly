@@ -4,7 +4,7 @@
 
 Supportly is a full-stack creator-support platform where creators can build personalized profiles, receive contributions from supporters, and connect with their community through messages.
 
-Built with **Next.js, MongoDB, NextAuth.js, and Razorpay**, this project explores authentication, database design, API development, and payment integration in a modern web application.
+Built with **Next.js, MongoDB, NextAuth.js, and Razorpay**, Supportly explores authentication, database design, API development, and payment integration in a modern web application.
 
 ## ✨ Features
 
@@ -33,7 +33,29 @@ Built with **Next.js, MongoDB, NextAuth.js, and Razorpay**, this project explore
 | React Icons | Interface icons |
 | ESLint | Code quality checks |
 
-## 📸 Application Pages
+## 📸 Screenshots
+
+### Homepage
+
+![Supportly Homepage](screenshots/screenshot1.png)
+
+### Creator Profile
+
+![Supportly Creator Profile](screenshots/screenshot2.png)
+
+### Creator Support & Payment
+
+![Supportly Payment Page](screenshots/screenshot3.png)
+
+### Dashboard
+
+![Supportly Dashboard](screenshots/screenshot4.png)
+
+### Account Settings
+
+![Supportly Account Settings](screenshots/screenshot5.png)
+
+## 📄 Application Pages
 
 - **Home** — Introduction to Supportly and its features.
 - **About** — Information about the platform.
@@ -55,8 +77,8 @@ Built with **Next.js, MongoDB, NextAuth.js, and Razorpay**, this project explore
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
-cd supportly
+git clone https://github.com/mansi0sinha/Supportly.git
+cd Supportly
 ```
 
 ### 2. Install dependencies
@@ -65,40 +87,37 @@ cd supportly
 npm install
 ```
 
-### 3. Set up environment variables
+### 3. Configure environment variables
 
 Create a `.env.local` file in the project root:
 
 ```env
-# MongoDB
 MONGODB_URI=your_mongodb_connection_string
 
-# NextAuth
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your_nextauth_secret
 
-# GitHub OAuth
 GITHUB_ID=your_github_client_id
 GITHUB_SECRET=your_github_client_secret
 
-# Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-# Razorpay
 RAZORPAY_KEY_ID=your_razorpay_test_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_test_key_secret
 ```
 
-Replace the placeholder values with your actual credentials. OAuth credentials are needed only for the providers you configure.
+Replace the values with your own credentials.
 
-Generate a NextAuth secret using Node.js:
+You only need to configure the OAuth providers you intend to use.
+
+Generate a secure NextAuth secret with Node.js:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-**Security:** Never commit `.env.local` or expose database credentials, `NEXTAUTH_SECRET`, or `RAZORPAY_KEY_SECRET`. Keep payment secrets on the server.
+> **Security:** Never commit `.env.local` or expose your MongoDB credentials, `NEXTAUTH_SECRET`, or `RAZORPAY_KEY_SECRET`. Keep sensitive payment credentials on the server.
 
 ### 4. Run the development server
 
@@ -106,26 +125,29 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open `http://localhost:3000` in your browser.
 
 ## 💳 Payment Flow
 
-Supportly integrates Razorpay for processing contributions.
+Supportly uses Razorpay to process creator contributions.
 
-1. The supporter enters their name, message, and contribution amount.
-2. The application requests an order from the server.
-3. The server creates an order through Razorpay.
+1. A supporter enters their name, message, and contribution amount.
+2. The frontend requests a payment order from the server.
+3. The server creates an order through the Razorpay API.
 4. Razorpay Checkout handles the payment.
-5. The server verifies the payment signature and checks the payment and order details.
-6. The verified contribution is saved to MongoDB.
-7. Recent verified contributions are retrieved and displayed on the creator's page.
+5. The server verifies the Razorpay payment signature.
+6. The server checks the payment, order, amount, currency, and payment status.
+7. The verified contribution is saved to MongoDB.
+8. Recent verified contributions are displayed on the creator's page.
 
-Payment verification is performed server-side rather than trusting the browser callback alone. For production use, webhooks and payment reconciliation should also be implemented to handle interrupted checkout sessions and database failures.
+Payment verification is performed server-side instead of trusting the browser callback alone.
+
+For production use, payment webhooks and reconciliation should also be configured to handle cases where a payment succeeds but the browser closes or the verification request fails.
 
 ## 📂 Project Structure
 
 ```text
-supportly/
+Supportly/
 ├── app/
 │   ├── about/
 │   ├── api/
@@ -148,90 +170,130 @@ supportly/
 │   ├── layout.js
 │   └── page.js
 ├── db/
+│   └── connectDB.js
 ├── lib/
+│   └── mongodb.js
 ├── models/
 │   ├── User.js
 │   └── Payment.js
 ├── public/
+├── screenshots/
+│   ├── screenshot1.png
+│   ├── screenshot2.png
+│   ├── screenshot3.png
+│   ├── screenshot4.png
+│   └── screenshot5.png
 ├── .gitignore
 ├── jsconfig.json
 ├── next.config.js
-└── package.json
+├── package.json
+└── README.md
 ```
 
-## 🧪 Running Quality Checks
+## 🧪 Running the Project
 
-Check the code with ESLint:
+### Development
+
+```bash
+npm run dev
+```
+
+### Lint
 
 ```bash
 npm run lint
 ```
 
-Create a production build:
+### Production Build
 
 ```bash
 npm run build
 ```
 
-Start the production server after a successful build:
+### Production Server
 
 ```bash
 npm run start
 ```
 
-Before deploying, manually test:
+Before deployment, manually test:
 
-- Account registration and login.
-- Invalid credentials and logout.
-- Profile updates and persistence after refresh.
-- Public creator pages.
-- Valid and invalid contribution amounts.
-- Successful, failed, and cancelled Razorpay test payments.
-- Payment verification and recent supporter records.
+- Account registration and login
+- Invalid credentials
+- Logout
+- Profile updates
+- Profile persistence after refresh
+- Public creator pages
+- Valid and invalid contribution amounts
+- Successful Razorpay test payments
+- Failed Razorpay payments
+- Cancelled Razorpay payments
+- Payment verification
+- Recent supporter records
 
-## 🔐 Security Considerations
+## 🔐 Security
 
-- Hash passwords before storing them.
-- Keep private credentials in server-side environment variables.
-- Validate request data on the server.
-- Verify payment signatures and payment status before saving contributions as successful.
-- Use HTTPS and production-specific OAuth callback URLs when deployed.
-- Configure Razorpay webhooks and reconciliation before relying on the system for production payments.
+Supportly follows several security practices:
+
+- Passwords are hashed using `bcryptjs`.
+- Sensitive credentials are stored in environment variables.
+- API requests are validated on the server.
+- Razorpay payment signatures are verified on the server.
+- Payment amounts and order details are validated before saving.
+- Sensitive Razorpay credentials are never sent to the client.
+- Authentication is handled through NextAuth.js.
+- Production deployments should use HTTPS.
+- Production OAuth callback URLs should be configured separately from local development URLs.
 
 ## 🌐 Deployment
 
-Supportly can be deployed to a hosting platform that supports Next.js, such as Vercel.
+Supportly can be deployed using a Next.js-compatible hosting platform such as Vercel.
 
-Before deployment:
+Before deploying:
 
 1. Push the project to GitHub.
-2. Configure the required environment variables in your hosting platform.
-3. Set `NEXTAUTH_URL` to your production URL.
-4. Update the GitHub and Google OAuth callback URLs.
-5. Configure the production MongoDB connection and Razorpay credentials.
-6. Run a production build and test the deployed application.
+2. Configure the production environment variables.
+3. Use a production MongoDB connection.
+4. Set `NEXTAUTH_URL` to the deployed application URL.
+5. Configure GitHub and Google OAuth callback URLs for production.
+6. Configure Razorpay credentials.
+7. Run the production build.
+8. Test authentication, profiles, and payments on the deployed application.
+
+For payment testing, use Razorpay test credentials before switching to production credentials.
 
 ## 🎯 What I Learned
 
-Through this project, I explored:
+Building Supportly helped me gain practical experience with:
 
-- Building a full-stack application with Next.js App Router.
-- Implementing authentication and protected user flows.
-- Designing MongoDB schemas with Mongoose.
-- Creating and validating API routes.
-- Integrating a third-party payment gateway.
-- Verifying payment details securely on the server.
-- Managing environment variables and handling API errors.
-- Connecting frontend components with backend services.
+- Full-stack development using Next.js App Router
+- React component development
+- MongoDB database integration
+- Mongoose schema and model design
+- Authentication using NextAuth.js
+- Password hashing with bcryptjs
+- REST API development
+- Server-side validation
+- Payment gateway integration with Razorpay
+- Payment signature verification
+- Protected user operations
+- Environment variable management
+- Error handling
+- Connecting frontend and backend systems
+- Building and structuring a complete full-stack application
 
 ## 👩‍💻 Author
 
-**Mansi Sinha**
+### Mansi Sinha
 
 MCA Student | Aspiring Full-Stack Developer
 
-- GitHub: [@mansi0sinha](https://github.com/mansi0sinha)
+**GitHub:** [@mansi0sinha](https://github.com/mansi0sinha)
+
+**Project:** [Supportly](https://github.com/mansi0sinha/Supportly)
 
 ---
 
-*Support creators. Celebrate creativity. Built with 💜 using Next.js.*
+### 💜 Support creators. Celebrate creativity.
+
+Built with **Next.js, MongoDB, NextAuth.js, and Razorpay**.
