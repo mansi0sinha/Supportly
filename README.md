@@ -33,27 +33,6 @@ Built with **Next.js, MongoDB, NextAuth.js, and Razorpay**, Supportly explores a
 | React Icons | Interface icons |
 | ESLint | Code quality checks |
 
-## 📸 Screenshots
-
-### Homepage
-
-![Supportly Homepage](screenshot/Screenshot2.png)
-
-### Creator Profile
-
-![Supportly Creator Profile](screenshot/Screenshot5.png)
-
-### Creator Support & Payment
-
-![Supportly Payment Page](screenshot/Screenshot4.png)
-
-### Login
-
-![Supportly Dashboard](screenshot/Screenshot3.png)
-
-### Find Creator
-
-![Supportly Account Settings](screenshot/Screenshot1.png)
 
 ## 📄 Application Pages
 
